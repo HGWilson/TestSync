@@ -1,0 +1,22 @@
+name: Sync A to B
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Sync to B repository
+      run: |
+        git config --global user.email "Wilson@hengetech.com.tw"
+        git config --global user.name "GitHub Actions Sync"
+        git remote add syncrepo https://github.com/TWBug/TestSync.git
+        git pull syncrepo main --allow-unrelated-histories
+        git push syncrepo main
