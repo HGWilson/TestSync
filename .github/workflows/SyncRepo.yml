@@ -1,33 +1,36 @@
-name: Sync A to B
+# @format
+
+name: Sync Repos
 
 on:
   push:
     branches:
       - main
+  # You can add more triggers, such as scheduled events
+  # schedule:
+  #   - cron: '0 0 * * *'
 
 jobs:
   sync:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout source repository
+        uses: actions/checkout@v2
 
-    - name: Specify how to reconcile divergent branches
-      run: |
-        git fetch origin main
-        git config pull.rebase false  # 或者 true，根據您的需要選擇合適的方式
-        git pull origin main --no-rebase  # 或者 --rebase、--ff-only，根據您的需要選擇合適的方式
-    - name: Resolve merge conflicts
-      run: |
-        git checkout main
-        git merge --no-commit --no-ff origin/main  # 解決合併衝突但不提交
-        # 解決衝突後，手動或使用指定工具完成合併並確認提交
-        
-    - name: Sync to B repository
-      run: |
-        git config --global user.email "Wilson@hengetech.com.tw"
-        git config --global user.name "GitHub Actions Sync"
-        git remote add syncrepo https://github.com/TWBug/TestSync.git
-        git pull syncrepo main --allow-unrelated-histories
-        git push syncrepo main
+      - name: Push to destination repository
+        run: |
+          git config --global user.email "your email"
+          git config --global user.name "your user name"
+          git clone https://${{ env.SOURCE_ORG_NAME }}:${{ secrets.SOURCE_PAT }}@github.com/${{ env.SOURCE_ORG_NAME }}/TestSync.git
+          cd TestSync
+          git remote add ${{ env.TARGET_REPO_NAME }} https://${{ env.TARGET_ORG_NAME }}:${{ secrets.TARGET_PAT }}@github.com/${{ env.TARGET_ORG_NAME }}/${{ env.TARGET_REPO_NAME }}.git
+          git remote update
+          git merge ${{ env.TARGET_REPO_NAME }}/main
+          git push origin main
+        env:
+          SOURCE_PAT: ${{ secrets.SOURCEPAT }}
+          TARGET_PAT: ${{ secrets.TARGETPAT }}
+          SOURCE_ORG_NAME: HGWilson
+          TARGET_ORG_NAME: TWBug
+          TARGET_REPO_NAME: TestSync
